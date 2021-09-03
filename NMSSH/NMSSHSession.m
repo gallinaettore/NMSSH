@@ -361,9 +361,7 @@
 
     if (_socket) {
         CFSocketInvalidate(_socket);
-        if (_socket) {
-            CFRelease(_socket);
-        }
+        CFRelease(_socket);
         _socket = NULL;
     }
 
