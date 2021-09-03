@@ -361,7 +361,10 @@
 
     if (_socket) {
         CFSocketInvalidate(_socket);
-        CFRelease(_socket);
+        @try {
+            CFRelease(_socket);
+        } @catch (NSException * e) {
+        }
         _socket = NULL;
     }
 
