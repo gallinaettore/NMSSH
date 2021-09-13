@@ -349,6 +349,28 @@
     return success;
 }
 
+- (BOOL)createEmptyFileAtPath:(NSString *)path {
+
+    LIBSSH2_SFTP_HANDLE *handle = [self openFileAtPath:path
+                                                 flags:LIBSSH2_FXF_WRITE|LIBSSH2_FXF_CREAT|LIBSSH2_FXF_TRUNC
+                                                  mode:LIBSSH2_SFTP_S_IRUSR|LIBSSH2_SFTP_S_IWUSR|LIBSSH2_SFTP_S_IRGRP|LIBSSH2_SFTP_S_IROTH];
+
+    if (!handle) {
+        return NO;
+    }
+    
+    uint8_t buffer[self.bufferSize];
+    long rc = libssh2_sftp_write(handle, (const char *)buffer, 0);
+
+    libssh2_sftp_close(handle);
+    
+    if (rc < 0) {
+        return NO;
+    }
+
+    return YES;
+}
+
 - (BOOL)resumeFileAtPath:(NSString *)localPath toFileAtPath:(NSString *)path progress:(BOOL (^)( NSUInteger, NSUInteger ))progress {
     return [self resumeStream:[NSInputStream inputStreamWithFileAtPath:localPath] toFileAtPath:path progress:progress];
 }
