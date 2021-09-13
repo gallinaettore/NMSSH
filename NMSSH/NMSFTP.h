@@ -253,7 +253,7 @@ Create an empty file
 @param path File path to create
 @returns Write success
 */
-- (BOOL)createEmptyFileAtPath:(NSString *)path;
+- (BOOL)createEmptyFileAtPath:(nonnull NSString *)path;
 
 /**
  Start or resume writing the contents of a file
