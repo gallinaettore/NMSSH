@@ -248,6 +248,14 @@
 - (BOOL)writeStream:(nonnull NSInputStream *)inputStream toFileAtPath:(nonnull NSString *)path progress:(BOOL (^_Nullable)(NSUInteger sent))progress;
 
 /**
+Create an empty file
+
+@param path File path to create
+@returns Write success
+*/
+- (BOOL)createEmptyFileAtPath:(NSString *)path;
+
+/**
  Start or resume writing the contents of a file
 
  If no file exists, one is created.
