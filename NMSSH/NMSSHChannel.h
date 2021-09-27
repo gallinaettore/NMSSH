@@ -96,8 +96,6 @@ typedef NS_ENUM(NSInteger, NMSSHChannelType)  {
  */
 - (nonnull NSString *)execute:(nonnull NSString *)command error:(NSError * _Nullable * _Nullable)error;
 
-- (nullable NSString *)executeReadingStdErr:(nonnull NSString *)command error:(NSError * _Nullable * _Nullable)error timeout:(nonnull NSNumber *)timeout;
-
 /**
  Execute a shell command on the server with a given timeout.
 
@@ -111,6 +109,10 @@ typedef NS_ENUM(NSInteger, NMSSHChannelType)  {
  @returns Shell command response
  */
 - (nullable NSString *)execute:(nonnull NSString *)command error:(NSError * _Nullable * _Nullable)error timeout:(nonnull NSNumber *)timeout;
+
+- (nullable NSString *)executeReadingStdErr:(nonnull NSString *)command error:(NSError * _Nullable * _Nullable)error timeout:(nonnull NSNumber *)timeout;
+
+- (nullable NSData *)executeReadingData:(nonnull NSString *)command error:(NSError * _Nullable * _Nullable)error timeout:(nonnull NSNumber *)timeout;
 
 /// ----------------------------------------------------------------------------
 /// @name Remote shell session

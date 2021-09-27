@@ -364,26 +364,6 @@
                 [errorResponse appendFormat:@"%@", [[NSString alloc] initWithBytes:errorBuffer length:erc encoding:NSUTF8StringEncoding]];
             }
             
-            
-
-            // Store all errors that might occur
-            /*if (libssh2_channel_get_exit_status(self.channel)) {
-                if (error) {
-                    erc = libssh2_channel_read_stderr(self.channel, errorBuffer, (ssize_t)sizeof(errorBuffer));
-
-                    NSString *desc = [[NSString alloc] initWithBytes:errorBuffer length:erc encoding:NSUTF8StringEncoding];
-                    if (!desc) {
-                        desc = @"An unspecified error occurred";
-                    }
-
-                    [userInfo setObject:desc forKey:NSLocalizedDescriptionKey];
-                    [userInfo setObject:[NSString stringWithFormat:@"%zi", erc] forKey:NSLocalizedFailureReasonErrorKey];
-
-                    *error = [NSError errorWithDomain:@"NMSSH"
-                                                 code:NMSSHChannelExecutionError
-                                             userInfo:userInfo];
-                }
-            }*/
 
             if (libssh2_channel_eof(self.channel) == 1 || rc == 0 || erc == 0) {
                 while ((rc  = libssh2_channel_read(self.channel, buffer, (ssize_t)sizeof(buffer))) > 0) {
@@ -465,6 +445,151 @@
 
     return nil;
 }
+
+
+
+- (NSData *)executeReadingData:(NSString *)command error:(NSError *__autoreleasing *)error timeout:(NSNumber *)timeout {
+    NMSSHLogInfo(@"Exec command %@", command);
+
+    // In case of error...
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:command forKey:@"command"];
+
+    if (![self openChannel:error]) {
+        return nil;
+    }
+
+    [self setLastResponse:nil];
+
+    int rc = 0;
+    [self setType:NMSSHChannelTypeExec];
+
+    // Try executing command
+    rc = libssh2_channel_exec(self.channel, [command UTF8String]);
+
+    if (rc != 0) {
+        if (error) {
+            [userInfo setObject:[[self.session lastError] localizedDescription] forKey:NSLocalizedDescriptionKey];
+            [userInfo setObject:[NSString stringWithFormat:@"%i", rc] forKey:NSLocalizedFailureReasonErrorKey];
+
+            *error = [NSError errorWithDomain:@"NMSSH"
+                                         code:NMSSHChannelExecutionError
+                                     userInfo:userInfo];
+        }
+
+        NMSSHLogError(@"Error executing command");
+        [self closeChannel];
+        return nil;
+    }
+
+    // Set non-blocking mode
+    libssh2_session_set_blocking(self.session.rawSession, 0);
+
+    // Set the timeout for blocking session
+    CFAbsoluteTime time = CFAbsoluteTimeGetCurrent() + [timeout doubleValue];
+
+    // Fetch response from output buffer
+    NSMutableData *allData = [[NSMutableData alloc] init];
+    NSMutableString *errorResponse = [[NSMutableString alloc] init];
+    for (;;) {
+        ssize_t rc;
+        ssize_t erc;
+        char buffer[self.bufferSize];
+        char errorBuffer[self.bufferSize];
+
+        do {
+            rc = libssh2_channel_read(self.channel, buffer, (ssize_t)sizeof(buffer));
+
+            if (rc > 0) {
+                [allData appendBytes:buffer length:rc];
+            }
+            
+            erc = libssh2_channel_read_stderr(self.channel, errorBuffer, (ssize_t)sizeof(errorBuffer));
+            
+            if (erc > 0) {
+                [errorResponse appendFormat:@"%@", [[NSString alloc] initWithBytes:errorBuffer length:erc encoding:NSUTF8StringEncoding]];
+            }
+
+            if (libssh2_channel_eof(self.channel) == 1 || rc == 0 || erc == 0) {
+                while ((rc  = libssh2_channel_read(self.channel, buffer, (ssize_t)sizeof(buffer))) > 0) {
+                    [allData appendBytes:buffer length:rc];
+                }
+                
+                while ((erc  = libssh2_channel_read_stderr(self.channel, errorBuffer, (ssize_t)sizeof(errorBuffer))) > 0) {
+                    [errorResponse appendFormat:@"%@", [[NSString alloc] initWithBytes:errorBuffer length:erc encoding:NSUTF8StringEncoding] ];
+                }
+                
+                if ([errorResponse length] > 0) {
+                    [userInfo setObject:errorResponse forKey:NSLocalizedDescriptionKey];
+                    [userInfo setObject:[NSString stringWithFormat:@"%zi", erc] forKey:NSLocalizedFailureReasonErrorKey];
+
+                    *error = [NSError errorWithDomain:@"NMSSH"
+                                                 code:NMSSHChannelExecutionResponseError
+                                             userInfo:userInfo];
+                }
+
+                [self setLastResponse:@""];
+                [self closeChannel];
+
+                return [allData copy];
+            }
+
+            // Check if the connection timed out
+            if ([timeout longValue] > 0 && time < CFAbsoluteTimeGetCurrent()) {
+                if (error) {
+                    NSString *desc = @"Connection timed out";
+
+                    [userInfo setObject:desc forKey:NSLocalizedDescriptionKey];
+
+                    *error = [NSError errorWithDomain:@"NMSSH"
+                                                 code:NMSSHChannelExecutionTimeout
+                                             userInfo:userInfo];
+                }
+
+                while ((rc  = libssh2_channel_read(self.channel, buffer, (ssize_t)sizeof(buffer))) > 0) {
+                    [allData appendBytes:buffer length:rc];
+                }
+                
+                while ((erc  = libssh2_channel_read_stderr(self.channel, errorBuffer, (ssize_t)sizeof(errorBuffer))) > 0) {
+                    [errorResponse appendFormat:@"%@", [[NSString alloc] initWithBytes:errorBuffer length:erc encoding:NSUTF8StringEncoding] ];
+                }
+                
+                if ([errorResponse length] > 0) {
+                    [userInfo setObject:errorResponse forKey:NSLocalizedDescriptionKey];
+                    [userInfo setObject:[NSString stringWithFormat:@"%zi", erc] forKey:NSLocalizedFailureReasonErrorKey];
+
+                    *error = [NSError errorWithDomain:@"NMSSH"
+                                                 code:NMSSHChannelExecutionResponseError
+                                             userInfo:userInfo];
+                }
+
+                [self setLastResponse:@""];
+                [self closeChannel];
+
+                return [allData copy];
+            }
+        } while (rc > 0);
+
+        if (rc != LIBSSH2_ERROR_EAGAIN) {
+            break;
+        }
+
+        waitsocket(CFSocketGetNative([self.session socket]), self.session.rawSession);
+    }
+
+    // If we've got this far, it means fetching execution response failed
+    if (error) {
+        [userInfo setObject:[[self.session lastError] localizedDescription] forKey:NSLocalizedDescriptionKey];
+        *error = [NSError errorWithDomain:@"NMSSH"
+                                     code:NMSSHChannelExecutionResponseError
+                                 userInfo:userInfo];
+    }
+
+    NMSSHLogError(@"Error fetching response from command");
+    [self closeChannel];
+
+    return nil;
+}
+
 
 // -----------------------------------------------------------------------------
 #pragma mark - REMOTE SHELL SESSION
