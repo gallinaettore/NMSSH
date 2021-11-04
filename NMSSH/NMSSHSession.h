@@ -3,6 +3,18 @@
 @class NMSSHHostConfig, NMSFTP;
 @protocol NMSSHSessionDelegate;
 
+
+typedef NS_ENUM(NSInteger, NMSSHSessionError) {
+    NMSSHSessionLibssh2InitError,
+    NMSSHSessionSocketError,
+    NMSSHSessionHandshakeError,
+    NMSSHSessionFingerprintError,
+    NMSSHSessionAgentError,
+    NMSSHSessionAuthenticationError,
+    NMSSHSessionAuthenticationMethodNotSupported,
+    NMSSHSessionInvalidParam
+};
+
 typedef NS_ENUM(NSInteger, NMSSHSessionHash) {
     NMSSHSessionHashMD5,
     NMSSHSessionHashSHA1
@@ -62,6 +74,8 @@ typedef NS_ENUM(NSInteger, NMSSHKnownHostStatus) {
  */
 @property (nonatomic, nullable, readonly) NMSSHHostConfig *hostConfig;
 
+
+
 /// ----------------------------------------------------------------------------
 /// @name Initialize a new SSH session
 /// ----------------------------------------------------------------------------
@@ -77,7 +91,9 @@ typedef NS_ENUM(NSInteger, NMSSHKnownHostStatus) {
  @param username A valid username the server will accept
  @returns NMSSHSession instance
  */
-+ (nonnull instancetype)connectToHost:(nonnull NSString *)host withUsername:(nonnull NSString *)username;
++ (nonnull instancetype)connectToHost:(nonnull NSString *)host
+                         withUsername:(nonnull NSString *)username
+                                error:(NSError * _Nullable * _Nullable)error;
 
 /**
  Shorthand method for initializing a NMSSHSession object and calling connect,
@@ -88,7 +104,10 @@ typedef NS_ENUM(NSInteger, NMSSHKnownHostStatus) {
  @param username A valid username the server will accept
  @returns NMSSHSession instance
  */
-+ (nonnull instancetype)connectToHost:(nonnull NSString *)host port:(NSInteger)port withUsername:(nonnull NSString *)username;
++ (nonnull instancetype)connectToHost:(nonnull NSString *)host
+                                 port:(NSInteger)port
+                         withUsername:(nonnull NSString *)username
+                                error:(NSError * _Nullable * _Nullable)error;
 
 /**
  Create and setup a new NMSSH instance.
@@ -162,6 +181,9 @@ typedef NS_ENUM(NSInteger, NMSSHKnownHostStatus) {
 /** The remote host banner. */
 @property (nonatomic, nullable, readonly) NSString *remoteBanner;
 
+/** The queue where all operations will be executed. */
+@property (nonatomic, readonly) dispatch_queue_t _Nonnull SSHQueue;
+
 /// ----------------------------------------------------------------------------
 /// @name Raw libssh2 session and socket reference
 /// ----------------------------------------------------------------------------
@@ -182,12 +204,6 @@ typedef NS_ENUM(NSInteger, NMSSHKnownHostStatus) {
  */
 @property (nonatomic, readonly, getter = isConnected) BOOL connected;
 
-/**
- Connect to the server using the default timeout (10 seconds)
-
- @returns Connection status
- */
-- (BOOL)connect;
 
 /**
  Connect to the server.
@@ -195,7 +211,8 @@ typedef NS_ENUM(NSInteger, NMSSHKnownHostStatus) {
  @param timeout The time, in seconds, to wait before giving up.
  @returns Connection status
  */
-- (BOOL)connectWithTimeout:(nonnull NSNumber *)timeout;
+
+- (BOOL)connectWithTimeout:(nonnull NSNumber *)timeout error:(NSError * _Nullable * _Nullable)error;
 
 /**
  Close the session
@@ -218,7 +235,7 @@ typedef NS_ENUM(NSInteger, NMSSHKnownHostStatus) {
  @param password Password for connected user
  @returns Authentication success
  */
-- (BOOL)authenticateByPassword:(nonnull NSString *)password;
+- (BOOL)authenticateByPassword:(nonnull NSString *)password error:(NSError * _Nullable * _Nullable)error;
 
 /**
  Authenticate by private key pair from file(s)
@@ -232,7 +249,8 @@ typedef NS_ENUM(NSInteger, NMSSHKnownHostStatus) {
  */
 - (BOOL)authenticateByPublicKey:(nullable NSString *)publicKey
                      privateKey:(nonnull NSString *)privateKey
-                    andPassword:(nullable NSString *)password;
+                       password:(nullable NSString *)password
+                          error:(NSError * _Nullable * _Nullable)error;
 
 /**
  Authenticate by private key pair
@@ -246,14 +264,9 @@ typedef NS_ENUM(NSInteger, NMSSHKnownHostStatus) {
  */
 - (BOOL)authenticateByInMemoryPublicKey:(nullable NSString *)publicKey
                              privateKey:(nonnull NSString *)privateKey
-                            andPassword:(nullable NSString *)password;
+                               password:(nullable NSString *)password
+                                  error:(NSError * _Nullable * _Nullable)error;
 
-/**
- Authenticate by keyboard-interactive using delegate.
-
- @returns Authentication success
- */
-- (BOOL)authenticateByKeyboardInteractive;
 
 /**
  Authenticate by keyboard-interactive using block.
@@ -266,14 +279,15 @@ typedef NS_ENUM(NSInteger, NMSSHKnownHostStatus) {
      to the given question.
  @returns Authentication success
  */
-- (BOOL)authenticateByKeyboardInteractiveUsingBlock:(NSString * _Nonnull(^_Nullable)( NSString * _Nonnull request))authenticationBlock;
+- (BOOL)authenticateByKeyboardInteractiveUsingBlock:(NSString * _Nonnull(^_Nullable)( NSString * _Nonnull request))authenticationBlock
+                                              error:(NSError * _Nullable * _Nullable)error;
 
 /**
  Setup and connect to an SSH agent
 
  @returns Authentication success
  */
-- (BOOL)connectToAgent;
+- (BOOL)connectToAgentWithError:(NSError * _Nullable * _Nullable)error;
 
 /**
  Get supported authentication methods

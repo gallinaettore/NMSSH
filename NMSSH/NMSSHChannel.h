@@ -6,10 +6,11 @@
 typedef NS_ENUM(NSInteger, NMSSHChannelError) {
     NMSSHChannelExecutionError,
     NMSSHChannelExecutionResponseError,
-    NMSSHChannelRequestPtyError,
+    NMSSHChannelPtyError,
+    NMSSHChannelSCPError,
     NMSSHChannelExecutionTimeout,
     NMSSHChannelAllocationError,
-    NMSSHChannelRequestShellError,
+    NMSSHChannelShellError,
     NMSSHChannelWriteError,
     NMSSHChannelReadError
 };
@@ -193,7 +194,8 @@ typedef NS_ENUM(NSInteger, NMSSHChannelType)  {
  @param height Height in characters for terminal
  @returns Size change success
  */
-- (BOOL)requestSizeWidth:(NSUInteger)width height:(NSUInteger)height;
+
+- (BOOL)requestSizeWidth:(NSUInteger)width height:(NSUInteger)height error:(NSError * _Nullable * _Nullable)error;
 
 /// ----------------------------------------------------------------------------
 /// @name SCP file transfer
@@ -207,21 +209,15 @@ typedef NS_ENUM(NSInteger, NMSSHChannelType)  {
 
  @param localPath Path to a file on the local computer
  @param remotePath Path to save the file to
+ @param progress Method called periodically with number of bytes uploaded. Returns NO to abort.
  @returns SCP upload success
  */
-- (BOOL)uploadFile:(nonnull NSString *)localPath to:(nonnull NSString *)remotePath;
+- (BOOL)uploadFile:(nonnull NSString *)localPath
+                to:(nonnull NSString *)remotePath
+             error:(NSError * _Nullable * _Nullable)error
+          progress:(BOOL (^_Nullable)(NSUInteger))progress;
 
-/**
- Download a remote file to local the filesystem.
 
- If to: specifies a directory, the file name from the original file will be
- used.
-
- @param remotePath Path to a file on the remote server
- @param localPath Path to save the file to
- @returns SCP download success
- */
-- (BOOL)downloadFile:(nonnull NSString *)remotePath to:(nonnull NSString *)localPath;
 
 /**
  Download a remote file to local the filesystem.
@@ -237,22 +233,8 @@ typedef NS_ENUM(NSInteger, NMSSHChannelType)  {
  */
 - (BOOL)downloadFile:(nonnull NSString *)remotePath
                   to:(nonnull NSString *)localPath
+               error:(NSError * _Nullable * _Nullable)error
             progress:(BOOL (^_Nullable)(NSUInteger, NSUInteger))progress;
-
-/**
- Upload a local file to a remote server.
-
- If to: specifies a directory, the file name from the original file will be
- used.
-
- @param localPath Path to a file on the local computer
- @param remotePath Path to save the file to
- @param progress Method called periodically with number of bytes uploaded. Returns NO to abort.
- @returns SCP upload success
- */
-- (BOOL)uploadFile:(nonnull NSString *)localPath
-                to:(nonnull NSString *)remotePath
-          progress:(BOOL (^_Nullable)(NSUInteger))progress;
 
 
 @end
