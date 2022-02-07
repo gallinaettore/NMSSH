@@ -108,9 +108,9 @@ NSString *const NMSSHChannelErrorDomain = @"NMSSHChannel";
 
 - (void)closeChannel {
     // Set blocking mode
-								  
-    libssh2_session_set_blocking(self.session.rawSession, 1);
-	 
+    if (self.session.rawSession) {
+        libssh2_session_set_blocking(self.session.rawSession, 1);
+    }
 
     if (self.channel) {
         int rc;
