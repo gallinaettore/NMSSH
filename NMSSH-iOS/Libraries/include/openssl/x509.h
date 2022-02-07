@@ -11,24 +11,24 @@
 #ifndef HEADER_X509_H
 # define HEADER_X509_H
 
-# include <openssl/e_os2.h>
-# include <openssl/ossl_typ.h>
-# include <openssl/symhacks.h>
-# include <openssl/buffer.h>
-# include <openssl/evp.h>
-# include <openssl/bio.h>
-# include <openssl/asn1.h>
-# include <openssl/safestack.h>
-# include <openssl/ec.h>
+# include <e_os2.h>
+# include <ossl_typ.h>
+# include <symhacks.h>
+# include <buffer.h>
+# include <evp.h>
+# include <bio.h>
+# include <asn1.h>
+# include <safestack.h>
+# include <ec.h>
 
 # if OPENSSL_API_COMPAT < 0x10100000L
-#  include <openssl/rsa.h>
-#  include <openssl/dsa.h>
-#  include <openssl/dh.h>
+#  include <rsa.h>
+#  include <dsa.h>
+#  include <dh.h>
 # endif
 
-# include <openssl/sha.h>
-# include <openssl/x509err.h>
+# include <sha.h>
+# include <x509err.h>
 
 #ifdef  __cplusplus
 extern "C" {
@@ -317,8 +317,8 @@ typedef struct SCRYPT_PARAMS_st {
 }
 #endif
 
-# include <openssl/x509_vfy.h>
-# include <openssl/pkcs7.h>
+# include <x509_vfy.h>
+# include <pkcs7.h>
 
 #ifdef  __cplusplus
 extern "C" {
