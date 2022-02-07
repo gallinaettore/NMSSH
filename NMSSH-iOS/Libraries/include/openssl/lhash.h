@@ -14,8 +14,8 @@
 #ifndef HEADER_LHASH_H
 # define HEADER_LHASH_H
 
-# include <e_os2.h>
-# include <bio.h>
+# include <openssl/e_os2.h>
+# include <openssl/bio.h>
 
 #ifdef  __cplusplus
 extern "C" {

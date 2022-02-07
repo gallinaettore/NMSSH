@@ -14,30 +14,30 @@
 # include <stdlib.h>
 # include <time.h>
 
-# include <e_os2.h>
+# include <openssl/e_os2.h>
 
 # ifndef OPENSSL_NO_STDIO
 #  include <stdio.h>
 # endif
 
-# include <safestack.h>
-# include <opensslv.h>
-# include <ossl_typ.h>
-# include <opensslconf.h>
-# include <cryptoerr.h>
+# include <openssl/safestack.h>
+# include <openssl/opensslv.h>
+# include <openssl/ossl_typ.h>
+# include <openssl/opensslconf.h>
+# include <openssl/cryptoerr.h>
 
 # ifdef CHARSET_EBCDIC
-#  include <ebcdic.h>
+#  include <openssl/ebcdic.h>
 # endif
 
 /*
  * Resolve problems on some operating systems with symbol names that clash
  * one way or another
  */
-# include <symhacks.h>
+# include <openssl/symhacks.h>
 
 # if OPENSSL_API_COMPAT < 0x10100000L
-#  include <opensslv.h>
+#  include <openssl/opensslv.h>
 # endif
 
 #ifdef  __cplusplus

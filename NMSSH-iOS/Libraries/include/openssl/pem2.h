@@ -9,5 +9,5 @@
 
 #ifndef HEADER_PEM2_H
 # define HEADER_PEM2_H
-# include <pemerr.h>
+# include <openssl/pemerr.h>
 #endif

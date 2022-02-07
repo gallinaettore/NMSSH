@@ -10,10 +10,10 @@
 #ifndef HEADER_MD4_H
 # define HEADER_MD4_H
 
-# include <opensslconf.h>
+# include <openssl/opensslconf.h>
 
 # ifndef OPENSSL_NO_MD4
-# include <e_os2.h>
+# include <openssl/e_os2.h>
 # include <stddef.h>
 # ifdef  __cplusplus
 extern "C" {

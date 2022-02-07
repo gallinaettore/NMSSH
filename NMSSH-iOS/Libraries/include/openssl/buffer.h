@@ -10,11 +10,11 @@
 #ifndef HEADER_BUFFER_H
 # define HEADER_BUFFER_H
 
-# include <ossl_typ.h>
+# include <openssl/ossl_typ.h>
 # ifndef HEADER_CRYPTO_H
-#  include <crypto.h>
+#  include <openssl/crypto.h>
 # endif
-# include <buffererr.h>
+# include <openssl/buffererr.h>
 
 
 #ifdef  __cplusplus
